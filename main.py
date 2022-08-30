@@ -20,11 +20,8 @@ class NotWorkTime(NamedTuple):
 
 def handlerErrorDelDirTree(func, path, _):
     import stat
-    if not os.access(path, os.W_OK):
-        os.chmod(path, stat.S_IWUSR)
-        func(path)
-    else:
-        log.warning(f"Ошибка удаления: {path}")
+    os.chmod(path, stat.S_IWUSR)
+    func(path)
 
 
 def worker():
