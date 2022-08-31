@@ -4,6 +4,7 @@ import sys
 import time
 
 import servicemanager
+import win32event
 from loguru import logger as log
 from typing import NamedTuple
 from datetime import datetime
@@ -30,6 +31,7 @@ def worker():
     if not udsp:
         log.critical("Не указана директория с профилями.")
         exit(1)
+    log.remove()
     log.add(os.path.join(udsp, "work_service.log"), level="DEBUG", rotation="10 MB",
             format="{time:YYYY-MM-DD HH:mm:ss} - {level} - {message}")
     not_work_time = None
@@ -89,11 +91,13 @@ class Service(SMWinservice):
         self._isRunning = False
 
     def main(self):
-        while self._isRunning:
+        while True:
             datetime_now = datetime.now()
-            if datetime_now.minute == 0 and datetime_now.second == 0:
+            if datetime_now.minute == 0:
+                log.debug("Запуск проверки.")
                 worker()
-            time.sleep(1)
+            if win32event.WaitForSingleObject(self.hWaitStop, 60000) == win32event.WAIT_OBJECT_0:
+                break
 
 
 if __name__ == "__main__":
